@@ -18,7 +18,11 @@ RUN pip install --no-cache-dir runpod \
     accelerate \
     librosa \
     soundfile \
-    pydub
+    pydub \
+    transformers==4.57.3 \
+    einops \
+    onnxruntime \
+    sox
 
 # Copy handler
 COPY handler.py /app/handler.py
@@ -26,4 +30,3 @@ COPY handler.py /app/handler.py
 # Start handler
 
 CMD ["python", "-u", "/app/handler.py"]
-
