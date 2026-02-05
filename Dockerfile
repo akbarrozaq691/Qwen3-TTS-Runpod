@@ -1,6 +1,11 @@
 FROM runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04
 
-RUN apt-get update
+RUN apt-get update && apt-get install -y \
+    sox \
+    libsox-fmt-all \
+    libsndfile1 \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -22,8 +27,7 @@ RUN pip install --no-cache-dir runpod \
     transformers==4.57.3 \
     einops \
     onnxruntime \
-    flash-attn \
-    sox
+    flash-attn
 
 # Copy handler
 COPY handler.py /app/handler.py
