@@ -27,6 +27,7 @@ RUN pip install --no-cache-dir runpod \
     transformers==4.57.3 \
     einops \
     onnxruntime \
+    sox \
     flash-attn
 
 # Copy handler
@@ -35,3 +36,4 @@ COPY handler.py /app/handler.py
 # Start handler
 
 CMD ["python", "-u", "/app/handler.py"]
+
