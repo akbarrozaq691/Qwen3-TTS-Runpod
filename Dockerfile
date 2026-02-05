@@ -22,6 +22,7 @@ RUN pip install --no-cache-dir runpod \
     transformers==4.57.3 \
     einops \
     onnxruntime \
+    flash-attn \
     sox
 
 # Copy handler
