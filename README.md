@@ -93,10 +93,10 @@ If `reference_audio` is provided without `reference_text` (or vice-versa), the A
 # Build the image
 docker build -t voice-clone-serverless .
 
-## License
-
-MIT
-
 # Run the container
 docker run --gpus all -p 8000:8000 voice-clone-serverless
 ```
+
+## License
+
+MIT
