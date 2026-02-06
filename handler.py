@@ -3,7 +3,6 @@ import torch
 import soundfile as sf
 import base64
 import tempfile
-import urllib.request
 import os
 import io
 import numpy as np
@@ -28,18 +27,6 @@ def load_model():
         attn_implementation="flash_attention_2",
     )
     return tts_model
-
-def download_reference_audio(url: str) -> str:
-    """Download reference audio from URL to temp file."""
-    temp_file = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
-
-    try:
-        urllib.request.urlretrieve(url, temp_file.name)
-        return temp_file.name
-    except Exception as e:
-        os.unlink(temp_file.name)
-        raise Exception(f"Failed to download reference audio: {e}")
-
 
 def base64_to_audio_file(b64_data: str) -> str:
     """Convert base64 audio to temp file."""
@@ -90,28 +77,27 @@ def handler(job: dict) -> dict:
     if not has_reference_audio and reference_text:
         return {"error": "reference_audio_url or reference_audio_base64 is required when providing reference_text"}
     
-    ref_audio_path = None
+    ref_audio = None
+    temp_audio_file = None
     
     try:
         model = load_model()
 
         # Handle reference audio
-        try:
-            if reference_audio_url:
-                print(f"[Handler] Downloading reference audio from URL...")
-                ref_audio_path = download_reference_audio(reference_audio_url)
-            elif reference_audio_base64:
-                print(f"[Handler] Decoding reference audio from base64...")
-                ref_audio_path = base64_to_audio_file(reference_audio_base64)
-        except Exception as e:
-            raise Exception(f"Failed to process reference audio: {str(e)}")
+        if reference_audio_url:
+            print(f"[Handler] Using reference audio from URL...")
+            ref_audio = reference_audio_url
+        elif reference_audio_base64:
+            print(f"[Handler] Decoding reference audio from base64...")
+            temp_audio_file = base64_to_audio_file(reference_audio_base64)
+            ref_audio = temp_audio_file
 
         print(f"[Handler] Generating speech for: {text[:50]}...")
 
         wavs, sr = model.generate_voice_clone(
             text=text,
             language="auto",
-            ref_audio=ref_audio_path,
+            ref_audio=ref_audio,
             ref_text=reference_text,
         )
 
@@ -131,12 +117,12 @@ def handler(job: dict) -> dict:
     
     finally:
         # Cleanup temp files in finally block to ensure it always runs
-        if ref_audio_path and os.path.exists(ref_audio_path):
+        if temp_audio_file and os.path.exists(temp_audio_file):
             try:
-                os.unlink(ref_audio_path)
-                print(f"[Handler] Cleaned up temp file: {ref_audio_path}")
+                os.unlink(temp_audio_file)
+                print(f"[Handler] Cleaned up temp file: {temp_audio_file}")
             except Exception as e:
-                print(f"[Handler] Warning: Could not clean up temp file {ref_audio_path}: {e}")
+                print(f"[Handler] Warning: Could not clean up temp file {temp_audio_file}: {e}")
 
 # Pre-load model on worker start
 print("[Handler] Pre-loading model...")
